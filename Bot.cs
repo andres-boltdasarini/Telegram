@@ -27,20 +27,22 @@ namespace VoiceTexterBot
             Console.WriteLine("Бот запущен");
         }
 
-        async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, 
+            CancellationToken cancellationToken)
         {
             //  Обрабатываем нажатия на кнопки  из Telegram Bot API: https://core.telegram.org/bots/api#callbackquery
-            if (update.Type == UpdateType.CallbackQuery)
-            {
-                //Message mess = (update as Update).Message;
-                await _telegramClient.SendMessage(update.Message.Chat.Id, "Вы нажали кнопку", cancellationToken: cancellationToken);
-                return;
-            }
+            //if (update.Type == UpdateType.CallbackQuery)
+            //{
+            //    await _telegramClient.SendMessage(update.Message.Chat.Id, 
+            //        $"Длина сообщения: {update.Message.Text.Length} знаков", cancellationToken: cancellationToken);
+            //    return;
+            //}
 
-            // Обрабатываем входящие сообщения из Telegram Bot API: https://core.telegram.org/bots/api#message
+            //Обрабатываем входящие сообщения из Telegram Bot API: https://core.telegram.org/bots/api#message
             if (update.Type == UpdateType.Message)
             {
-                await _telegramClient.SendMessage(update.Message.Chat.Id, "Вы отправили сообщение", cancellationToken: cancellationToken);
+                Console.WriteLine($"Получено сообщение {update.Message.Text}");
+                await _telegramClient.SendMessage(update.Message.Chat.Id, $"Длина сообщения: {update.Message.Text.Length} знаков", cancellationToken: cancellationToken);
                 return;
             }
         }
