@@ -31,7 +31,7 @@ namespace VoiceTexterBot
         {
             return new AppSettings()
             {
-                BotToken = "7621230195:AAHExKZQldZU3iei2QId0DJt18JK4Z50xH0"
+                BotToken = "Bot_token"
             };
         }
 
