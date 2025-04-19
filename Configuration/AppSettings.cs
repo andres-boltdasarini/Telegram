@@ -19,5 +19,9 @@
         /// Формат аудио при загрузке
         /// </summary>
         public string InputAudioFormat { get; set; }
+        /// <summary>
+        /// Формат аудио при загрузке
+        /// </summary>
+        public string OutputAudioFormat { get; set; }
     }
 }
