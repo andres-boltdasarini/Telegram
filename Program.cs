@@ -7,6 +7,7 @@ using Telegram.Bot;
 using VoiceTexterBot.Configuration;
 using VoiceTexterBot.Controllers;
 using VoiceTexterBot.Services;
+using System.IO;
 
 namespace VoiceTexterBot
 {
@@ -30,10 +31,12 @@ namespace VoiceTexterBot
 
         static AppSettings BuildAppSettings()
         {
+            var sr = File.OpenText(@"/Users/user/source/repos/VoiceTexterBot/token.txt");
+            string strToken = sr.ReadLine();
             return new AppSettings()
             {
                 DownloadsFolder = "C:\\Users\\user\\Downloads",
-                BotToken = "7770441474:AAG5yiP01-W6sV4taP8LblrVpo3zNffdJ6Y",
+                BotToken = strToken,
                 AudioFileName = "audio",
                 InputAudioFormat = "ogg",
                 OutputAudioFormat = "wav",
