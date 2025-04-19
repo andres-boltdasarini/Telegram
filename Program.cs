@@ -35,7 +35,7 @@ namespace VoiceTexterBot
             string strToken = sr.ReadLine();
             return new AppSettings()
             {
-                DownloadsFolder = "C:\\Users\\user\\Downloads",
+                DownloadsFolder = "D:\\download",
                 BotToken = strToken,
                 AudioFileName = "audio",
                 InputAudioFormat = "ogg",
