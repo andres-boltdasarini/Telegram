@@ -27,11 +27,15 @@ namespace VoiceTexterBot
             await host.RunAsync();
             Console.WriteLine("Сервис остановлен");
         }
+
         static AppSettings BuildAppSettings()
         {
             return new AppSettings()
             {
-                BotToken = "Bot_token"
+                DownloadsFolder = "C:\\Users\\user\\Downloads",
+                BotToken = "bottoken",
+                AudioFileName = "audio",
+                InputAudioFormat = "ogg",
             };
         }
 
@@ -41,7 +45,7 @@ namespace VoiceTexterBot
             services.AddSingleton(appSettings);
 
             services.AddSingleton<IStorage, MemoryStorage>();
-
+            services.AddSingleton<IFileHandler, AudioFileHandler>();
             // Подключаем контроллеры сообщений и кнопок
             services.AddTransient<DefaultMessageController>();
             services.AddTransient<VoiceMessageController>();
