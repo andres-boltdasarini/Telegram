@@ -31,18 +31,23 @@ namespace VoiceTexterBot
             CancellationToken cancellationToken)
         {
             //  Обрабатываем нажатия на кнопки  из Telegram Bot API: https://core.telegram.org/bots/api#callbackquery
-            //if (update.Type == UpdateType.CallbackQuery)
-            //{
-            //    await _telegramClient.SendMessage(update.Message.Chat.Id, 
-            //        $"Длина сообщения: {update.Message.Text.Length} знаков", cancellationToken: cancellationToken);
-            //    return;
-            //}
+            if (update.Type == UpdateType.CallbackQuery)
+            {
+                await _telegramClient.SendMessage(update.CallbackQuery.From.Id, $"Данный тип сообщений не поддерживается. Пожалуйста отправьте текст.",
+                    cancellationToken: cancellationToken);
+                return;
+            }
 
             //Обрабатываем входящие сообщения из Telegram Bot API: https://core.telegram.org/bots/api#message
             if (update.Type == UpdateType.Message)
             {
+                double total =0;
                 Console.WriteLine($"Получено сообщение {update.Message.Text}");
-                await _telegramClient.SendMessage(update.Message.Chat.Id, $"Длина сообщения: {update.Message.Text.Length} знаков", cancellationToken: cancellationToken);
+                if (double.TryParse(update.Message.Text, out double value))
+                {
+                    total = Calcul(update.Message.Text);
+                }
+                    await _telegramClient.SendMessage(update.Message.Chat.Id, $"Длина сообщения: {update.Message.Text.Length} знаков, сумма {total}", cancellationToken: cancellationToken);
                 return;
             }
         }
@@ -65,6 +70,29 @@ namespace VoiceTexterBot
             Thread.Sleep(10000);
 
             return Task.CompletedTask;
+        }
+        private double Calcul(string str) 
+        {
+            Console.WriteLine($"это число");
+            List<double> nums = new List<double>();
+            string num = "";
+            double db = 0;
+            foreach (char ch in str)
+            {
+                if (ch != ' ')
+                {
+                    num += ch;
+                }
+                else
+                {
+                    db = double.Parse(num);
+                    nums.Add(db);
+                    num = "";
+                }
+            }
+            db = double.Parse(num);
+            nums.Add(db);
+            return nums.Sum();
         }
     }
 }
