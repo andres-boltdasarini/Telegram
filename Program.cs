@@ -4,10 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Telegram.Bot;
-using VoiceTexterBot.Configuration;
-using VoiceTexterBot.Controllers;
-using VoiceTexterBot.Services;
-using System.IO;
 
 namespace VoiceTexterBot
 {
@@ -29,35 +25,18 @@ namespace VoiceTexterBot
             Console.WriteLine("Сервис остановлен");
         }
 
-        static AppSettings BuildAppSettings()
-        {
-            var sr = File.OpenText(@"/Users/user/source/repos/VoiceTexterBot/token.txt");
-            string strToken = sr.ReadLine();
-            return new AppSettings()
-            {
-                DownloadsFolder = "D:\\download",
-                BotToken = strToken,
-                AudioFileName = "audio",
-                InputAudioFormat = "ogg",
-                OutputAudioFormat = "wav",
-            };
-        }
-
         static void ConfigureServices(IServiceCollection services)
         {
-            AppSettings appSettings = BuildAppSettings();
-            services.AddSingleton(appSettings);
-
-            services.AddSingleton<IStorage, MemoryStorage>();
-            services.AddSingleton<IFileHandler, AudioFileHandler>();
-            // Подключаем контроллеры сообщений и кнопок
-            services.AddTransient<DefaultMessageController>();
-            services.AddTransient<VoiceMessageController>();
-            services.AddTransient<TextMessageController>();
-            services.AddTransient<InlineKeyboardController>();
-
-            services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(appSettings.BotToken));
+            // Регистрируем объект TelegramBotClient c токеном подключения
+            services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(GetTokenString(@"/Users/user/source/repos/VoiceTexterBot/token.txt")));
+            // Регистрируем постоянно активный сервис бота
             services.AddHostedService<Bot>();
+        }
+        private static string GetTokenString(string path)
+        {
+            var sr = File.OpenText(path);
+            string strToken = sr.ReadLine();
+            return strToken;
         }
     }
 }
