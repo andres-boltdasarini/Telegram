@@ -19,16 +19,18 @@ namespace VoiceTexterBot
                 .UseConsoleLifetime() // Позволяет поддерживать приложение активным в консоли
                 .Build(); // Собираем
 
-            Console.WriteLine("Сервис запущен");
+            Console.WriteLine("service started");
             // Запускаем сервис
             await host.RunAsync();
-            Console.WriteLine("Сервис остановлен");
+            Console.WriteLine("service stopped");
         }
 
         static void ConfigureServices(IServiceCollection services)
         {
             // Регистрируем объект TelegramBotClient c токеном подключения
-            services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(GetTokenString(@"/Users/user/source/repos/VoiceTexterBot/token.txt")));
+            //services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(GetTokenString(@"/Users/user/source/repos/VoiceTexterBot/token.txt")));
+            services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(GetTokenString("/home/u/Документы/Telegram/token.txt")));
+            
             // Регистрируем постоянно активный сервис бота
             services.AddHostedService<Bot>();
         }

@@ -21,40 +21,39 @@ namespace VoiceTexterBot
             _telegramClient.StartReceiving(
                 HandleUpdateAsync,
                 HandleErrorAsync,
-                new ReceiverOptions() { AllowedUpdates = { } }, // Здесь выбираем, какие обновления хотим получать. В данном случае разрешены все
+                new ReceiverOptions() { AllowedUpdates = { } },
                 cancellationToken: stoppingToken);
 
-            Console.WriteLine("Бот запущен");
+            Console.WriteLine("Bot started");
         }
 
         async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, 
             CancellationToken cancellationToken)
         {
-            //  Обрабатываем нажатия на кнопки  из Telegram Bot API: https://core.telegram.org/bots/api#callbackquery
+            //  Telegram Bot API: https://core.telegram.org/bots/api#callbackquery
             if (update.Type == UpdateType.CallbackQuery)
             {
-                await _telegramClient.SendMessage(update.CallbackQuery.From.Id, $"Данный тип сообщений не поддерживается. Пожалуйста отправьте текст.",
+                await _telegramClient.SendMessage(update.CallbackQuery.From.Id, $"err send text.",
                     cancellationToken: cancellationToken);
                 return;
             }
 
-            //Обрабатываем входящие сообщения из Telegram Bot API: https://core.telegram.org/bots/api#message
+            // Telegram Bot API: https://core.telegram.org/bots/api#message
             if (update.Type == UpdateType.Message)
             {
                 double total =0;
-                Console.WriteLine($"Получено сообщение {update.Message.Text}");
+                Console.WriteLine($"text  {update.Message.Text}");
                 if (double.TryParse(update.Message.Text, out double value))
                 {
                     total = Calcul(update.Message.Text);
                 }
-                    await _telegramClient.SendMessage(update.Message.Chat.Id, $"Длина сообщения: {update.Message.Text.Length} знаков, сумма {total}", cancellationToken: cancellationToken);
+                    await _telegramClient.SendMessage(update.Message.Chat.Id, $"text Length: {update.Message.Text.Length} num sum {total}", cancellationToken: cancellationToken);
                 return;
             }
         }
 
         Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
-            // Задаем сообщение об ошибке в зависимости от того, какая именно ошибка произошла
             var errorMessage = exception switch
             {
                 ApiRequestException apiRequestException
@@ -62,18 +61,18 @@ namespace VoiceTexterBot
                 _ => exception.ToString()
             };
 
-            // Выводим в консоль информацию об ошибке
+
             Console.WriteLine(errorMessage);
 
-            // Задержка перед повторным подключением
-            Console.WriteLine("Ожидаем 10 секунд перед повторным подключением.");
+
+            Console.WriteLine("Waiting 10 seconds before retry");
             Thread.Sleep(10000);
 
             return Task.CompletedTask;
         }
         private double Calcul(string str) 
         {
-            Console.WriteLine($"это число");
+            Console.WriteLine($"this is num");
             List<double> nums = new List<double>();
             string num = "";
             double db = 0;
