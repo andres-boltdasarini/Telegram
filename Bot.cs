@@ -1,4 +1,3 @@
-using System.Threading;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
@@ -12,12 +11,14 @@ namespace VoiceTexterBot
 {
     internal class Bot : BackgroundService
     {
-        private ITelegramBotClient _telegramClient;
+        private readonly ITelegramBotClient _telegramClient;
+        private ILogger<Bot> _logger;
         public string State { get; set; }
 
-        public Bot(ITelegramBotClient telegramClient)
+        public Bot(ITelegramBotClient telegramClient, ILogger<Bot> logger)
         {
             _telegramClient = telegramClient;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -28,91 +29,99 @@ namespace VoiceTexterBot
                 new ReceiverOptions() { AllowedUpdates = { } },
                 cancellationToken: stoppingToken);
 
-            Console.WriteLine("Bot started");
+            _logger.LogInformation("Bot started");
         }
 
-        async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update,
-            CancellationToken cancellationToken)
+        async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-
-
-            if (update.Type == UpdateType.Message && update.Message.Type == MessageType.Text)
+            if (update.Type == UpdateType.Message && update.Message?.Type == MessageType.Text)
             {
-
                 await HandleMessageAsync(update.Message, cancellationToken);
             }
-            if (update.Type == UpdateType.CallbackQuery)
+            else if (update.Type == UpdateType.CallbackQuery)
             {
-                var data = update.CallbackQuery.Data;
+                var data = update.CallbackQuery?.Data;
+
+                if (data == null) return;
 
                 State = data;
-                switch (update.CallbackQuery.Data)
+                switch (data)
                 {
-                    case $"sumCharLength":
+                    case "sumCharLength":
+                        await _telegramClient.SendMessage(
+                            update.CallbackQuery.From.Id,
+                            "Отправьте текст для подсчёта символов",
+                            cancellationToken: cancellationToken);
+                        break;
 
-                        await _telegramClient.SendMessage(update.CallbackQuery.From.Id, $"Отправьте текст для подсчёта символов" );
+                    default: // "calculateNum"
+                        await _telegramClient.SendMessage(
+                            update.CallbackQuery.From.Id,
+                            "Отправьте числа через пробел для вычисления суммы",
+                            cancellationToken: cancellationToken);
+                        break;
+                }
+            }
+        }
 
+        public async Task HandleMessageAsync(Message message, CancellationToken ct)
+        {
+            if (message.Text == null) return;
+
+            if (State == "sumCharLength")
+            {
+                await _telegramClient.SendMessage(
+                    chatId: message.Chat.Id,
+                    text: $"Количество символов: {message.Text.Length}",
+                    cancellationToken: ct);
+            }
+            else if (State == "calculateNum")
+            {
+                try
+                {
+                    var sum = CalculateSum(message.Text);
+                    await _telegramClient.SendMessage(
+                        chatId: message.Chat.Id,
+                        text: $"Сумма чисел: {sum}",
+                        cancellationToken: ct);
+                }
+                catch
+                {
+                    await _telegramClient.SendMessage(
+                        chatId: message.Chat.Id,
+                        text: "Ошибка: введите числа через пробел (например: 1 2 3)",
+                        cancellationToken: ct);
+                }
+            }
+            else
+            {
+                switch (message.Text)
+                {
+                    case "/start":
+                        var buttons = new List<InlineKeyboardButton[]>();
+                        buttons.Add(new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Сумма символов в строке", "sumCharLength"),
+                            InlineKeyboardButton.WithCallbackData("Сумма чисел через пробел", "calculateNum")
+                        });
+
+                        await _telegramClient.SendMessage(
+                            message.Chat.Id,
+                            "Выберите действие",
+                            cancellationToken: ct,
+                            parseMode: ParseMode.Html,
+                            replyMarkup: new InlineKeyboardMarkup(buttons));
                         break;
 
                     default:
-                        await _telegramClient.SendMessage(update.CallbackQuery.From.Id, $"Отправьте числа через пробел для вычисления суммы");
-
+                        await _telegramClient.SendMessage(
+                            message.Chat.Id,
+                            "Выберете start, чтобы начать.",
+                            cancellationToken: ct);
                         break;
                 }
-
-            }
-
-        }
-        public async Task HandleMessageAsync(Message message, CancellationToken ct)
-        {
-            if(State== "sumCharLength")
-
-                {
-                await _telegramClient.SendMessage(
-                        chatId: message.Chat.Id,
-                        text: $"Количество символов: {message.Text.Length}");
-                }
-                else if (State == "calculateNum")
-                {
-                    try
-                    {
-                        var sum = Calcul(message.Text);
-                    await _telegramClient.SendMessage(
-                            chatId: message.Chat.Id,
-                            text: $"Сумма чисел: {sum}");
-                    }
-                    catch
-                    {
-                    await _telegramClient.SendMessage(
-                            chatId: message.Chat.Id,
-                            text: "Ошибка: введите числа через пробел (например: 1 2 3)");
-                    }
-                }
-            switch (message.Text)
-            {
-                case "/start":
-                    var buttons = new List<InlineKeyboardButton[]>();
-                    buttons.Add(new[]
-                    {
-                        InlineKeyboardButton.WithCallbackData($" Сумма символов в строке" , $"sumCharLength"),
-                        InlineKeyboardButton.WithCallbackData($" Сумма чисел через пробел" , $"calculateNum")
-                    });
-
-                    // передаем кнопки вместе с сообщением (параметр ReplyMarkup)
-                    await _telegramClient.SendMessage(message.Chat.Id, $"<b>  Наш бот превращает аудио в текст.</b> {Environment.NewLine}" +
-                        $"{Environment.NewLine}Можно записать сообщение и переслать другу, если лень печатать.{Environment.NewLine}", cancellationToken: ct, parseMode: ParseMode.Html, replyMarkup: new InlineKeyboardMarkup(buttons));
-
-                    break;
-
-                default:
-                    await _telegramClient.SendMessage(
-                        message.Chat.Id,
-                        "Отправьте аудио для превращения в текст.",
-                        cancellationToken: ct);
-                    break;
             }
         }
-
 
         Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
@@ -123,16 +132,14 @@ namespace VoiceTexterBot
                 _ => exception.ToString()
             };
 
-
-            Console.WriteLine(errorMessage);
-
-
-            Console.WriteLine("Waiting 10 seconds before retry");
+            _logger.LogError(errorMessage);
+            _logger.LogInformation("Waiting 10 seconds before retry");
             Thread.Sleep(10000);
 
             return Task.CompletedTask;
         }
-        private double Calcul(string str)
+
+        private double CalculateSum(string str)
         {
             Console.WriteLine($"this is num");
             List<double> nums = new List<double>();
